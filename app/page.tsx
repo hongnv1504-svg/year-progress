@@ -1,32 +1,15 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-
-// Thành phần hiệu ứng tuyết rơi
-const SnowEffect = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute bg-white rounded-full opacity-80 animate-snow"
-          style={{
-            width: (Math.random() * 3 + 2) + 'px',
-            height: (Math.random() * 3 + 2) + 'px',
-            left: (Math.random() * 100) + '%',
-            top: '-10px',
-            animationDuration: (Math.random() * 3 + 2) + 's',
-            animationDelay: (Math.random() * 2) + 's',
-          }}
-        />
-      ))}
-    </div>
-  );
-};
+// Import file cấu hình ngày lễ
+import { getThemeForToday, Theme } from './config/specialDays';
 
 export default function Home() {
   const [mode, setMode] = useState<'year' | 'focus'>('year');
   const [yearProgress, setYearProgress] = useState(0);
   const [year, setYear] = useState(new Date().getFullYear());
+
+  // Thêm State quản lý Theme (Ngày lễ)
+  const [currentTheme, setCurrentTheme] = useState<Theme | null>(null);
 
   // Focus Mode State
   const [inputMinutes, setInputMinutes] = useState('');
@@ -36,8 +19,12 @@ export default function Home() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // 1. Tính % năm
+  // 1. Tính % năm và Check Theme
   useEffect(() => {
+    // Kiểm tra xem hôm nay có phải ngày đặc biệt không
+    const theme = getThemeForToday();
+    setCurrentTheme(theme);
+
     const updateYear = () => {
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -114,6 +101,11 @@ export default function Home() {
 
   const focusProgress = totalFocusTime > 0 ? ((totalFocusTime - timeLeft) / totalFocusTime) * 100 : 0;
 
+  // Lấy màu từ theme hoặc dùng màu mặc định (đỏ cho Year mode, đen cho Focus mode)
+  // Logic: Ở chế độ Year, nếu có theme thì dùng theme.barColor, nếu không thì dùng 'bg-red-600' (mặc định cũ)
+  // Tuy nhiên, vì Tailwind không hỗ trợ dynamic class name tốt với biến tùy ý, ta sẽ dùng style inline cho backgroundColor.
+  const activeBarColor = currentTheme?.barColor || '#DC2626'; // #DC2626 là mã hex của red-600
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white p-4 overflow-hidden relative font-sans text-black">
       
@@ -123,11 +115,42 @@ export default function Home() {
           <div className="w-full space-y-10 animate-in fade-in duration-500">
             {/* Số năm nhỏ gọn 80% */}
             <h1 className="text-4xl font-black tracking-tighter uppercase">{year}</h1>
-            <div className="relative w-full h-10 border-[3px] border-black p-1 bg-white overflow-hidden shadow-[0_8px_20px_rgba(220,38,38,0.1)]">
-              <div className="h-full bg-red-600 transition-all duration-1000 ease-linear" style={{ width: `${yearProgress}%` }} />
-              <SnowEffect />
+            
+            {/* Thanh Progress Bar mới (Hỗ trợ Theme) */}
+            <div 
+              className="relative w-full h-10 border-[3px] border-black p-1 bg-white overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.1)]"
+              // Đổi màu viền nếu muốn (hiện tại vẫn để đen cho ngầu)
+            >
+              <div 
+                className="h-full transition-all duration-1000 ease-linear relative" 
+                style={{ 
+                  width: `${yearProgress}%`,
+                  backgroundColor: activeBarColor // Dùng màu từ Theme
+                }} 
+              >
+                 {/* Icon chạy theo thanh Progress (Chỉ hiện khi có theme) */}
+                 {currentTheme?.emoji && (
+                  <span 
+                    className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 text-2xl z-10 filter drop-shadow-sm"
+                    style={{ right: '-10px' }} // Tinh chỉnh vị trí icon
+                  >
+                    {currentTheme.emoji}
+                  </span>
+                )}
+              </div>
             </div>
-            <p className="text-xl font-bold tabular-nums">{yearProgress.toFixed(5)}%</p>
+
+            {/* Phần trăm */}
+            <p className="text-xl font-bold tabular-nums" style={{ color: currentTheme ? activeBarColor : 'inherit' }}>
+              {yearProgress.toFixed(5)}%
+            </p>
+
+            {/* Hiển thị thông điệp ngày lễ nếu có */}
+            {currentTheme?.message && (
+              <p className="text-sm font-medium italic mt-2 animate-pulse" style={{ color: activeBarColor }}>
+                {currentTheme.message}
+              </p>
+            )}
           </div>
         )}
 
@@ -168,15 +191,6 @@ export default function Home() {
           </button>
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes snow {
-          0% { transform: translateY(0) translateX(0); opacity: 0; }
-          20% { opacity: 1; }
-          100% { transform: translateY(60px) translateX(20px); opacity: 0; }
-        }
-        .animate-snow { animation: snow linear infinite; }
-      `}</style>
     </main>
   );
 }
