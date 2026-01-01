@@ -12,7 +12,7 @@ export type Theme = {
 export const SPECIAL_DAYS: Record<string, Theme> = {
   '1-1': { 
     id: 'new-year', 
-    emoji: '🎆', 
+    emoji: '🎉', 
     barColor: '#FFD700', // Màu vàng Gold
     message: 'Happy New Year!'
   },
