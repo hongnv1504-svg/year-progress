@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-// Import file cấu hình ngày lễ
 import { getThemeForToday, Theme } from './config/specialDays';
 
 export default function Home() {
@@ -8,7 +7,7 @@ export default function Home() {
   const [yearProgress, setYearProgress] = useState(0);
   const [year, setYear] = useState(new Date().getFullYear());
 
-  // Thêm State quản lý Theme (Ngày lễ)
+  // State quản lý Theme (Ngày lễ)
   const [currentTheme, setCurrentTheme] = useState<Theme | null>(null);
 
   // Focus Mode State
@@ -101,10 +100,8 @@ export default function Home() {
 
   const focusProgress = totalFocusTime > 0 ? ((totalFocusTime - timeLeft) / totalFocusTime) * 100 : 0;
 
-  // Lấy màu từ theme hoặc dùng màu mặc định (đỏ cho Year mode, đen cho Focus mode)
-  // Logic: Ở chế độ Year, nếu có theme thì dùng theme.barColor, nếu không thì dùng 'bg-red-600' (mặc định cũ)
-  // Tuy nhiên, vì Tailwind không hỗ trợ dynamic class name tốt với biến tùy ý, ta sẽ dùng style inline cho backgroundColor.
-  const activeBarColor = currentTheme?.barColor || '#DC2626'; // #DC2626 là mã hex của red-600
+  // Lấy màu từ theme (nếu có) hoặc dùng màu đỏ mặc định
+  const activeBarColor = currentTheme?.barColor || '#DC2626';
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white p-4 overflow-hidden relative font-sans text-black">
@@ -113,26 +110,23 @@ export default function Home() {
         
         {mode === 'year' && (
           <div className="w-full space-y-10 animate-in fade-in duration-500">
-            {/* Số năm nhỏ gọn 80% */}
+            {/* Số năm */}
             <h1 className="text-4xl font-black tracking-tighter uppercase">{year}</h1>
             
-            {/* Thanh Progress Bar mới (Hỗ trợ Theme) */}
-            <div 
-              className="relative w-full h-10 border-[3px] border-black p-1 bg-white overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.1)]"
-              // Đổi màu viền nếu muốn (hiện tại vẫn để đen cho ngầu)
-            >
+            {/* Thanh Progress Bar */}
+            <div className="relative w-full h-10 border-[3px] border-black p-1 bg-white overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.1)]">
               <div 
                 className="h-full transition-all duration-1000 ease-linear relative" 
                 style={{ 
                   width: `${yearProgress}%`,
-                  backgroundColor: activeBarColor // Dùng màu từ Theme
+                  backgroundColor: activeBarColor // Chỉ đổi màu nền của thanh bar
                 }} 
               >
-                 {/* Icon chạy theo thanh Progress (Chỉ hiện khi có theme) */}
+                 {/* Icon chạy theo thanh Progress */}
                  {currentTheme?.emoji && (
                   <span 
                     className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 text-2xl z-10 filter drop-shadow-sm"
-                    style={{ right: '-10px' }} // Tinh chỉnh vị trí icon
+                    style={{ right: '-10px' }} 
                   >
                     {currentTheme.emoji}
                   </span>
@@ -140,14 +134,14 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Phần trăm */}
-            <p className="text-xl font-bold tabular-nums" style={{ color: currentTheme ? activeBarColor : 'inherit' }}>
+            {/* Phần trăm: Luôn màu đen */}
+            <p className="text-xl font-bold tabular-nums text-black">
               {yearProgress.toFixed(5)}%
             </p>
 
-            {/* Hiển thị thông điệp ngày lễ nếu có */}
+            {/* Thông điệp ngày lễ: Bỏ in nghiêng (italic), in đậm (font-bold), màu đen */}
             {currentTheme?.message && (
-              <p className="text-sm font-medium italic mt-2 animate-pulse" style={{ color: activeBarColor }}>
+              <p className="text-sm font-bold mt-2 animate-pulse text-black">
                 {currentTheme.message}
               </p>
             )}
@@ -164,7 +158,6 @@ export default function Home() {
                     <input type="number" step="any" min="0" value={inputMinutes} onChange={handleInputChange} placeholder="0" className="w-20 text-center text-4xl font-black border-b-4 border-black focus:outline-none" autoFocus />
                     <span className="text-xl font-medium text-gray-400">minutes</span>
                   </div>
-                  {/* Dòng chữ hướng dẫn: Nhỏ, nghiêng, mờ nhẹ */}
                   <p className="text-xs text-gray-400 italic tracking-wide animate-pulse">Press Enter to start</p>
                 </div>
               </form>
@@ -181,7 +174,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Nút Go to Focus / Back to Year ở dưới cùng */}
+        {/* Nút Go to Focus / Back to Year */}
         <div className="pt-20">
           <button 
             onClick={() => { setMode(mode === 'year' ? 'focus' : 'year'); setIsTimerRunning(false); setTimeLeft(0); }}
